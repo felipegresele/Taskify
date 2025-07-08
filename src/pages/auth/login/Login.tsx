@@ -1,24 +1,50 @@
 import { useForm } from "react-hook-form";
 import { InputProps } from "../../../components/input/Input";
+import { use } from "react";
+import { getUsuarios } from './../../api/ServiceUsuario';
+import { useNavigate } from "react-router-dom";
 
 type FormData = {
-  name: string;
   email: string;
   password: string;
 };
 
+type Usuario = {
+  email: string,
+  password: string
+}
+
 export function Login() {
   const { control, reset, handleSubmit } = useForm<FormData>({
     defaultValues: {
-      name: "",
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = () => {
-    console.log("Dados enviados com sucesso");
-    reset();
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      const usuarios = await getUsuarios();
+
+      const usuarioValido = usuarios.find(
+        (u: Usuario) => u.email === data.email && u.password === data.password
+      )
+
+      if (usuarioValido) {
+        console.log("Login, OK!", usuarioValido);
+        reset();
+        navigate("home")
+      }
+      else {
+        alert("Email ou senha inválidos");
+      }
+    }
+    catch(err) {
+      alert("Erro ao buscar usuário");
+      console.error(err);
+    }
   };
 
   return (
@@ -29,23 +55,6 @@ export function Login() {
         </h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-          <InputProps
-            name="name"
-            control={control}
-            placeholder="Digite seu usuário..."
-            rules={{
-              required: "Usuário é obrigatório",
-              maxLength: {
-                value: 25,
-                message: "Usuário deve ter no máximo 25 caracteres",
-              },
-              minLength: {
-                value: 5,
-                message: "Usuário deve ter no mínimo 5 caracteres",
-              },
-            }}
-            label="Usuário:"
-          />
 
           <InputProps
             name="email"
